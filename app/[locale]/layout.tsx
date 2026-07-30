@@ -3,6 +3,7 @@ import { getMessages } from "next-intl/server";
 
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "@/app/globals.css";
 
 const montserrat = Montserrat({
@@ -42,6 +43,7 @@ export default async function RootLayout({
       <body>
         <NextIntlClientProvider messages={messages}>
           {children}
+          <Toaster />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
         </p>
         <h1 className="secHd">Forgot Password</h1>
         <p className="mt-4 text-sm text-gray-500 max-w-xl mx-auto">
-          Enter your email and we&apos;ll send you a link to reset your
+          Enter your email and we&apos;ll send you a code to reset your
           password.
         </p>
       </section>

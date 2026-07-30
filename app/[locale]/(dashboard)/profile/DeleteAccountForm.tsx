@@ -4,13 +4,19 @@ import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "@/components/ui/form-field";
+import { useRouter } from "@/i18n/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 type DeleteAccountValues = {
-  password: string;
+  email: string;
   confirmDelete: boolean;
 };
 
 export default function DeleteAccountForm() {
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const deleteAccount = useAuthStore((s) => s.deleteAccount);
+
   const {
     register,
     handleSubmit,
@@ -18,15 +24,18 @@ export default function DeleteAccountForm() {
     formState: { errors, isSubmitting },
   } = useForm<DeleteAccountValues>({
     defaultValues: {
-      password: "",
+      email: "",
       confirmDelete: false,
     },
   });
 
-  const onSubmit = async (data: DeleteAccountValues) => {
-    // Placeholder until delete-account API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    console.log("Delete account submitted:", data);
+  const onSubmit = async () => {
+    try {
+      await deleteAccount();
+      router.push("/sign-in");
+    } catch {
+      // Error is stored in the auth store
+    }
   };
 
   return (
@@ -41,21 +50,26 @@ export default function DeleteAccountForm() {
         </h2>
         <p className="mt-1 text-sm text-gray-500">
           Permanently delete your account and all associated data. This action
-          cannot be undone.
+          cannot be undone. Type your email to confirm.
         </p>
       </div>
 
       <FormField
-        label="Password"
-        type="password"
-        placeholder="Enter your password to confirm"
-        autoComplete="current-password"
-        error={errors.password?.message}
-        {...register("password", {
-          required: "Password is required to delete your account",
-          minLength: {
-            value: 8,
-            message: "Password must be at least 8 characters",
+        label="Email"
+        type="email"
+        placeholder="Enter your email to confirm"
+        autoComplete="email"
+        error={errors.email?.message}
+        {...register("email", {
+          required: "Email is required to delete your account",
+          validate: (value) => {
+            if (!user?.email) {
+              return "Unable to verify your email. Please sign in again.";
+            }
+            return (
+              value.trim().toLowerCase() === user.email.trim().toLowerCase() ||
+              "Email does not match your account email"
+            );
           },
         })}
       />

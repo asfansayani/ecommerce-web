@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +8,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 const OTP_LENGTH = 6;
 
@@ -16,6 +18,14 @@ type VerifyFormValues = {
 };
 
 export default function VerifyForm() {
+  const router = useRouter();
+  const email = useAuthStore((s) => s.email);
+  const purpose = useAuthStore((s) => s.purpose);
+  const token = useAuthStore((s) => s.token);
+  const verifyOtp = useAuthStore((s) => s.verifyOtp);
+  const sendOtp = useAuthStore((s) => s.sendOtp);
+  const isLoading = useAuthStore((s) => s.isLoading);
+
   const {
     control,
     handleSubmit,
@@ -26,17 +36,39 @@ export default function VerifyForm() {
     },
   });
 
+  useEffect(() => {
+    if (token) return;
+    if (!email || !purpose) {
+      router.replace("/sign-in");
+    }
+  }, [email, purpose, token, router]);
+
   const onSubmit = async (data: VerifyFormValues) => {
-    // Placeholder until verify API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    console.log("Verify submitted:", data);
+    const currentPurpose = purpose;
+    try {
+      await verifyOtp(data.otp);
+      if (currentPurpose === "PASSWORD_RESET") {
+        router.push("/reset-password");
+      } else {
+        router.push("/profile");
+      }
+    } catch {
+      // Error is stored in the auth store
+    }
   };
 
   const handleResend = async () => {
-    // Placeholder until resend API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    console.log("Resend code requested");
+    if (!email || !purpose) return;
+    try {
+      await sendOtp(email, purpose);
+    } catch {
+      // Error is stored in the auth store
+    }
   };
+
+  if (!token && (!email || !purpose)) {
+    return null;
+  }
 
   return (
     <form
@@ -44,8 +76,14 @@ export default function VerifyForm() {
       className="mx-auto flex w-full max-w-xl flex-col gap-5 rounded-lg border border-border bg-white p-6 md:p-8"
       noValidate
     >
+      <p className="text-center text-sm text-gray-500">
+        Code sent to <span className="font-medium text-primary">{email}</span>
+      </p>
+
       <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium text-primary text-center">Verification code</p>
+        <p className="text-sm font-medium text-primary text-center">
+          Verification code
+        </p>
         <Controller
           name="otp"
           control={control}
@@ -84,8 +122,8 @@ export default function VerifyForm() {
         ) : null}
       </div>
 
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Verifying..." : "Verify"}
+      <Button type="submit" disabled={isSubmitting || isLoading}>
+        {isSubmitting || isLoading ? "Verifying..." : "Verify"}
       </Button>
 
       <p className="text-center text-sm text-gray-500">
@@ -93,7 +131,8 @@ export default function VerifyForm() {
         <button
           type="button"
           onClick={handleResend}
-          className="font-medium text-[#A37C43] underline-offset-2 hover:underline"
+          disabled={isLoading}
+          className="font-medium text-[#A37C43] underline-offset-2 hover:underline disabled:opacity-50"
         >
           Resend
         </button>

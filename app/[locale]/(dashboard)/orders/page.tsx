@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 const PAGE_SIZE = 3;
 
 type OrdersPageProps = {
+  params: Promise<{ locale: string }>;
   searchParams: Promise<{ status?: string; page?: string }>;
 };
 
@@ -28,7 +29,11 @@ function buildOrdersBasePath(status: OrderStatusFilter) {
   return status === "all" ? "/orders" : `/orders?status=${status}`;
 }
 
-export default async function OrdersPage({ searchParams }: OrdersPageProps) {
+export default async function OrdersPage({
+  params,
+  searchParams,
+}: OrdersPageProps) {
+  const { locale } = await params;
   const { status, page: pageParam } = await searchParams;
   const activeStatus: OrderStatusFilter =
     status && isOrderStatusFilter(status) ? status : "all";
@@ -50,7 +55,11 @@ export default async function OrdersPage({ searchParams }: OrdersPageProps) {
     }
 
     const response = await getOrders(query);
-    orders = (response?.data ?? []).map(normalizeOrder);
+    console.log(response);
+    
+    orders = (response?.data ?? []).map((order) =>
+      normalizeOrder(order, locale)
+    );
     totalPages = Math.max(1, response?.meta?.totalPages ?? 1);
     currentPage = response?.meta?.page ?? requestedPage;
   } catch {

@@ -1,4 +1,5 @@
 import { Pagination } from "@/types/common";
+import { getTranslation } from "@/lib/helpers/getTranslation";
 
 export type OrderStatus =
   | "unpaid"
@@ -35,6 +36,7 @@ export type OrderDetail = Order & {
   customerName: string;
   mobileNumber: string;
   address: string;
+  trackingId?: string;
   invoiceUrl?: string;
   canCancel: boolean;
 };
@@ -48,8 +50,18 @@ export type ApiOrderItem = {
   qty?: number;
   price?: string | number;
   unitPrice?: string | number;
+  finalAmountPerUnit?: string | number;
+  lineSubtotal?: string | number;
   image?: string;
   productImage?: string;
+  productImageUrls?: string[];
+  translations?: {
+    id?: number;
+    name?: string;
+    description?: string;
+    language: string;
+    orderItemId?: number;
+  }[];
   product?: {
     id?: number | string;
     name?: string;
@@ -84,6 +96,7 @@ export type ApiOrder = {
   created_at?: string;
   invoiceUrl?: string;
   invoice_url?: string;
+  orderTrackingId?: string | null;
   canCancel?: boolean;
   totalItems?: number;
   itemCount?: number;
@@ -101,6 +114,8 @@ export type ApiOrder = {
     | {
         name?: string;
         fullName?: string;
+        firstName?: string;
+        lastName?: string;
         phone?: string;
         mobile?: string;
         address?: string;
@@ -129,6 +144,17 @@ export type OrdersResponse = {
 
 export type OrderDetailResponse = {
   data: ApiOrder;
+};
+
+export type TrackOrderPayload = {
+  email: string;
+  orderTrackingId: string;
+};
+
+export type TrackOrderResponse = {
+  message?: string;
+  success?: boolean;
+  data?: ApiOrder;
 };
 
 const STATUS_MAP: Record<string, OrderStatus> = {
@@ -184,19 +210,34 @@ export function normalizeStatus(status?: string): OrderStatus {
   );
 }
 
-function normalizeItem(item: ApiOrderItem, index: number): OrderItem {
+function normalizeItem(
+  item: ApiOrderItem,
+  index: number,
+  locale = "en"
+): OrderItem {
   const product = item.product;
+  const itemTranslation = getTranslation(item.translations, locale);
+  const productTranslation = getTranslation(product?.translations, locale);
+
   return {
     id: Number(item.id ?? product?.id ?? index + 1),
     name:
+      itemTranslation?.name ||
       item.name ||
       item.productName ||
       item.title ||
+      productTranslation?.name ||
       product?.name ||
       "Product",
     quantity: Number(item.quantity ?? item.qty ?? 1),
-    price: toMoney(item.price ?? item.unitPrice ?? product?.price),
+    price: toMoney(
+      item.finalAmountPerUnit ??
+        item.unitPrice ??
+        item.price ??
+        product?.price
+    ),
     image:
+      item.productImageUrls?.[0] ||
       item.image ||
       item.productImage ||
       product?.image ||
@@ -224,9 +265,7 @@ function resolveCustomerName(order: ApiOrder) {
   }
   if (typeof order.shippingAddress === "object") {
     return (
-      order.shippingAddress?.fullName ||
-      order.shippingAddress?.name ||
-      ""
+      order.shippingAddress?.firstName + " " + order.shippingAddress?.lastName || ""
     );
   }
   if (order.delivery?.name) return order.delivery.name;
@@ -260,9 +299,11 @@ function resolveOrderNumber(order: ApiOrder) {
   return `BIJOU-${value}`;
 }
 
-export function normalizeOrder(order: ApiOrder): Order {
+export function normalizeOrder(order: ApiOrder, locale = "en"): Order {
   const rawItems = order.items ?? order.orderItems ?? order.products ?? [];
-  const items = rawItems.map(normalizeItem);
+  const items = rawItems.map((item, index) =>
+    normalizeItem(item, index, locale)
+  );
   const totalItems =
     order.totalItems ??
     order.itemCount ??
@@ -280,8 +321,11 @@ export function normalizeOrder(order: ApiOrder): Order {
   };
 }
 
-export function normalizeOrderDetail(order: ApiOrder): OrderDetail {
-  const base = normalizeOrder(order);
+export function normalizeOrderDetail(
+  order: ApiOrder,
+  locale = "en"
+): OrderDetail {
+  const base = normalizeOrder(order, locale);
   const vatValue = order.vat ?? order.tax ?? order.vatPercentage;
   const vat =
     typeof vatValue === "number" ||
@@ -304,6 +348,9 @@ export function normalizeOrderDetail(order: ApiOrder): OrderDetail {
     customerName: resolveCustomerName(order) || "-",
     mobileNumber: resolveMobile(order) || "-",
     address: resolveAddress(order) || "-",
+    trackingId:
+      order.orderTrackingId ||
+      undefined,
     invoiceUrl: order.invoiceUrl || order.invoice_url,
     canCancel:
       order.canCancel ??

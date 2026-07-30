@@ -219,3 +219,8 @@ body {
     @apply font-sans;
   }
 }
+
+.isolate.outline-none {
+  z-index: 9999;
+  top: 10px !important;
+}

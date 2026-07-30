@@ -4,7 +4,8 @@ import { Controller, useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField } from "@/components/ui/form-field";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 type SignUpFormValues = {
   firstName: string;
@@ -16,6 +17,9 @@ type SignUpFormValues = {
 };
 
 export default function SignUpForm() {
+  const router = useRouter();
+  const signup = useAuthStore((s) => s.signup);
+
   const {
     register,
     handleSubmit,
@@ -36,9 +40,17 @@ export default function SignUpForm() {
   const password = watch("password");
 
   const onSubmit = async (data: SignUpFormValues) => {
-    // Placeholder until auth API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    console.log("Sign up submitted:", data);
+    try {
+      await signup({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+      });
+      router.push("/verify");
+    } catch {
+      // Error is stored in the auth store
+    }
   };
 
   return (

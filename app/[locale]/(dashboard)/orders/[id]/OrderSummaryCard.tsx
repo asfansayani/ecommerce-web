@@ -40,6 +40,10 @@ export default function OrderSummaryCard({ order }: { order: OrderDetail }) {
 
       <div className="mt-4 divide-y divide-border">
         <SummaryRow label="Order No." value={order.orderNumber} />
+        <SummaryRow
+          label="Tracking ID"
+          value={order.trackingId || "-"}
+        />
         <SummaryRow label="Placed on" value={order.placedOn} />
         <SummaryRow label="Subtotal" value={`AED ${order.subtotal}`} />
         <SummaryRow label="VAT" value={order.vat} />

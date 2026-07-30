@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
+import { useAuthStore } from "@/store/authStore";
 
 type ChangePasswordValues = {
   currentPassword: string;
@@ -11,12 +12,14 @@ type ChangePasswordValues = {
 };
 
 export default function ChangePasswordForm() {
+  const changePassword = useAuthStore((s) => s.changePassword);
+
   const {
     register,
     handleSubmit,
     watch,
     reset,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
+    formState: { errors, isSubmitting },
   } = useForm<ChangePasswordValues>({
     defaultValues: {
       currentPassword: "",
@@ -28,10 +31,15 @@ export default function ChangePasswordForm() {
   const newPassword = watch("newPassword");
 
   const onSubmit = async (data: ChangePasswordValues) => {
-    // Placeholder until change-password API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    console.log("Change password submitted:", data);
-    reset();
+    try {
+      await changePassword({
+        oldPassword: data.currentPassword,
+        newPassword: data.newPassword,
+      });
+      reset();
+    } catch {
+      // Error is stored in the auth store
+    }
   };
 
   return (
@@ -89,10 +97,6 @@ export default function ChangePasswordForm() {
             value === newPassword || "Passwords do not match",
         })}
       />
-
-      {isSubmitSuccessful ? (
-        <p className="text-sm text-[#A37C43]">Password changed successfully.</p>
-      ) : null}
 
       <Button type="submit" disabled={isSubmitting} className="self-start">
         {isSubmitting ? "Updating..." : "Update Password"}

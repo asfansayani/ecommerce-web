@@ -3,14 +3,36 @@
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { AuthApiError } from "@/lib/api/auth";
+import { useAuthStore } from "@/store/authStore";
+import { routing } from "@/i18n/routing";
 
 type SignInFormValues = {
   email: string;
   password: string;
 };
 
+function toLocalePath(callbackUrl: string) {
+  const segments = callbackUrl.split("/");
+  const maybeLocale = segments[1];
+
+  if (
+    routing.locales.includes(
+      maybeLocale as (typeof routing.locales)[number]
+    )
+  ) {
+    const rest = `/${segments.slice(2).join("/")}`;
+    return rest === "/" ? "/" : rest.replace(/\/$/, "") || "/";
+  }
+
+  return callbackUrl.startsWith("/") ? callbackUrl : "/profile";
+}
+
 export default function SignInForm() {
+  const router = useRouter();
+  const login = useAuthStore((s) => s.login);
+
   const {
     register,
     handleSubmit,
@@ -23,9 +45,17 @@ export default function SignInForm() {
   });
 
   const onSubmit = async (data: SignInFormValues) => {
-    // Placeholder until auth API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    console.log("Sign in submitted:", data);
+    try {
+      await login(data.email, data.password);
+      const callbackUrl = new URLSearchParams(window.location.search).get(
+        "callbackUrl"
+      );
+      router.push(callbackUrl ? toLocalePath(callbackUrl) : "/profile");
+    } catch (err) {
+      if (err instanceof AuthApiError && err.statusCode === 409) {
+        router.push("/verify");
+      }
+    }
   };
 
   return (

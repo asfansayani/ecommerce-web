@@ -11,9 +11,9 @@ export default function OrderDetailProducts({
       {items.map((item) => (
         <div
           key={item.id}
-          className="flex items-start gap-4 rounded-lg border border-border bg-white p-4 md:p-5"
+          className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 md:p-5"
         >
-          <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-[#F9F6F2] md:size-20">
+          <div className="relative shrink-0 overflow-hidden rounded-md bg-[#F9F6F2] md:w-40 md:h-50 w-20 h-25">
             <Image
               src={item.image || "/assets/images/productImage.svg"}
               alt={item.name}

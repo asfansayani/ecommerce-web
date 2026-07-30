@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
+import { useAuthStore } from "@/store/authStore";
 
 type ProfileUpdateValues = {
   firstName: string;
@@ -11,10 +13,14 @@ type ProfileUpdateValues = {
 };
 
 export default function ProfileUpdateForm() {
+  const user = useAuthStore((s) => s.user);
+  const updateProfile = useAuthStore((s) => s.updateProfile);
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
+    reset,
+    formState: { errors, isSubmitting },
   } = useForm<ProfileUpdateValues>({
     defaultValues: {
       firstName: "",
@@ -23,10 +29,25 @@ export default function ProfileUpdateForm() {
     },
   });
 
+  useEffect(() => {
+    if (!user) return;
+
+    reset({
+      firstName: user.firstName ?? "",
+      lastName: user.lastName ?? "",
+      email: user.email ?? "",
+    });
+  }, [user, reset]);
+
   const onSubmit = async (data: ProfileUpdateValues) => {
-    // Placeholder until profile API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    console.log("Profile update submitted:", data);
+    try {
+      await updateProfile({
+        firstName: data.firstName,
+        lastName: data.lastName,
+      });
+    } catch {
+      // Error is stored in the auth store
+    }
   };
 
   return (
@@ -38,7 +59,7 @@ export default function ProfileUpdateForm() {
       <div>
         <h2 className="text-lg font-semibold text-primary">Update Profile</h2>
         <p className="mt-1 text-sm text-gray-500">
-          Update your name and email address.
+          Update your first and last name. Email cannot be changed.
         </p>
       </div>
 
@@ -77,19 +98,9 @@ export default function ProfileUpdateForm() {
         type="email"
         placeholder="you@example.com"
         autoComplete="email"
-        error={errors.email?.message}
-        {...register("email", {
-          required: "Email is required",
-          pattern: {
-            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            message: "Please enter a valid email",
-          },
-        })}
+        disabled
+        {...register("email")}
       />
-
-      {isSubmitSuccessful ? (
-        <p className="text-sm text-[#A37C43]">Profile updated successfully.</p>
-      ) : null}
 
       <Button type="submit" disabled={isSubmitting} className="self-start px-6">
         {isSubmitting ? "Saving..." : "Save Changes"}

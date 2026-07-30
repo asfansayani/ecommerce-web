@@ -2,16 +2,18 @@ import type { Metadata } from "next";
 import { getLocale } from "next-intl/server";
 import ProductCard from "@/components/home/ProductCard";
 import PaginationControls from "@/components/dashboard/PaginationControls";
-import { getProducts } from "@/lib/api/products";
+import { getWishlist } from "@/lib/api/wishlist";
 import { getTranslation } from "@/lib/helpers/getTranslation";
-import type { Product } from "@/types/product";
+import {
+  normalizeWishlistProducts,
+} from "@/types/wishlist";
 
 export const metadata: Metadata = {
   title: "Wishlist – Bijou Sky",
   description: "Browse your saved Bijou Sky favourites.",
 };
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 2;
 
 type WishlistPageProps = {
   searchParams: Promise<{ page?: string }>;
@@ -22,19 +24,19 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   const { page: pageParam } = await searchParams;
   const requestedPage = Math.max(1, Number(pageParam) || 1);
 
-  let products: Product[] = [];
+  let products = normalizeWishlistProducts([]);
   let totalPages = 1;
   let currentPage = requestedPage;
   let total = 0;
   let hasError = false;
 
   try {
-    const response = await getProducts({
+    const response = await getWishlist({
       page: requestedPage,
       limit: PAGE_SIZE,
     });
 
-    products = response?.data ?? [];
+    products = normalizeWishlistProducts(response?.data ?? []);
     totalPages = Math.max(1, response?.meta?.totalPages ?? 1);
     currentPage = response?.meta?.page ?? requestedPage;
     total = response?.meta?.total ?? products.length;
@@ -63,7 +65,9 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
         </h1>
         <p className="mt-2 max-w-xl text-sm text-gray-500">
           Your saved pieces, ready whenever you are.
-          {!hasError && total > 0 ? ` ${total} item${total === 1 ? "" : "s"}.` : null}
+          {!hasError && total > 0
+            ? ` ${total} item${total === 1 ? "" : "s"}.`
+            : null}
         </p>
       </div>
 

@@ -3,17 +3,21 @@
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { FormField } from "@/components/ui/form-field";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { useAuthStore } from "@/store/authStore";
 
 type ForgotPasswordFormValues = {
   email: string;
 };
 
 export default function ForgotPasswordForm() {
+  const router = useRouter();
+  const sendOtp = useAuthStore((s) => s.sendOtp);
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isSubmitSuccessful },
+    formState: { errors, isSubmitting },
   } = useForm<ForgotPasswordFormValues>({
     defaultValues: {
       email: "",
@@ -21,9 +25,12 @@ export default function ForgotPasswordForm() {
   });
 
   const onSubmit = async (data: ForgotPasswordFormValues) => {
-    // Placeholder until forgot-password API is wired up
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    console.log("Forgot password submitted:", data);
+    try {
+      await sendOtp(data.email, "PASSWORD_RESET");
+      router.push("/verify");
+    } catch {
+      // Error is stored in the auth store
+    }
   };
 
   return (
@@ -47,15 +54,8 @@ export default function ForgotPasswordForm() {
         })}
       />
 
-      {isSubmitSuccessful ? (
-        <p className="text-sm text-[#A37C43]">
-          If an account exists for that email, we&apos;ve sent reset
-          instructions.
-        </p>
-      ) : null}
-
       <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Sending..." : "Send Reset Link"}
+        {isSubmitting ? "Sending..." : "Send Code"}
       </Button>
 
       <p className="text-center text-sm text-gray-500">

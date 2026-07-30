@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import { getOrderById } from "@/lib/api/orders";
 import { normalizeOrderDetail } from "@/types/order";
 import DeliveryInformationCard from "./DeliveryInformationCard";
+import DownloadInvoiceButton from "./DownloadInvoiceButton";
 import OrderDetailProducts from "./OrderDetailProducts";
 import OrderStatusStepper from "./OrderStatusStepper";
 import OrderSummaryCard from "./OrderSummaryCard";
 
 type OrderDetailPageProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 };
 
 export async function generateMetadata({
@@ -25,7 +26,7 @@ export async function generateMetadata({
 export default async function OrderDetailPage({
   params,
 }: OrderDetailPageProps) {
-  const { id } = await params;
+  const { id, locale } = await params;
 
   let order = null;
   let hasError = false;
@@ -35,7 +36,7 @@ export default async function OrderDetailPage({
     if (!response?.data) {
       notFound();
     }
-    order = normalizeOrderDetail(response.data);
+    order = normalizeOrderDetail(response.data, locale);
   } catch {
     hasError = true;
   }
@@ -91,30 +92,7 @@ export default async function OrderDetailPage({
                   Cancel Order
                 </Button>
               ) : null}
-              {order.invoiceUrl ? (
-                <Button
-                  size="default"
-                  className="h-10 rounded-md px-4 text-xs font-semibold uppercase tracking-[1px]"
-                  nativeButton={false}
-                  render={
-                    <a
-                      href={order.invoiceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    />
-                  }
-                >
-                  View Invoice
-                </Button>
-              ) : (
-                <Button
-                  size="default"
-                  className="h-10 rounded-md px-4 text-xs font-semibold uppercase tracking-[1px]"
-                  disabled
-                >
-                  View Invoice
-                </Button>
-              )}
+              <DownloadInvoiceButton orderId={order.id} />
             </div>
           </div>
 

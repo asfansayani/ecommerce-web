@@ -1,27 +1,65 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useAuthStore } from "@/store/authStore";
+import type { UpdateNotificationPreferencePayload } from "@/types/auth";
 
-type PreferenceKey = "newsUpdates" | "pushNotification" | "emailNotification";
+type PreferenceKey = keyof UpdateNotificationPreferencePayload;
 
 const preferences: {
   key: PreferenceKey;
   label: string;
 }[] = [
-  { key: "newsUpdates", label: "News and updates" },
-  { key: "pushNotification", label: "Push Notification" },
-  { key: "emailNotification", label: "Email Notification" },
+  { key: "pushPromotional", label: "Push Notification" },
+  { key: "inAppPromotional", label: "News and updates" },
+  { key: "inAppSystem", label: "In-app system" },
 ];
+
+const defaultValues: UpdateNotificationPreferencePayload = {
+  pushPromotional: true,
+  inAppPromotional: true,
+  inAppSystem: true,
+};
 
 export default function NotificationPreferences() {
   const baseId = useId();
-  const [values, setValues] = useState<Record<PreferenceKey, boolean>>({
-    newsUpdates: true,
-    pushNotification: true,
-    emailNotification: true,
-  });
+  const user = useAuthStore((s) => s.user);
+  const updateNotificationPreferences = useAuthStore(
+    (s) => s.updateNotificationPreferences
+  );
+  const isLoading = useAuthStore((s) => s.isLoading);
+
+  const [values, setValues] =
+    useState<UpdateNotificationPreferencePayload>(defaultValues);
+  const [updatingKey, setUpdatingKey] = useState<PreferenceKey | null>(null);
+
+  useEffect(() => {
+    const prefs = user?.userNotificationPref;
+    if (!prefs) return;
+
+    setValues({
+      pushPromotional: prefs.pushPromotional ?? true,
+      inAppPromotional: prefs.inAppPromotional ?? true,
+      inAppSystem: prefs.inAppSystem ?? true,
+    });
+  }, [user]);
+
+  const handleToggle = async (key: PreferenceKey, checked: boolean) => {
+    const previous = values;
+    const next = { ...values, [key]: checked };
+    setValues(next);
+    setUpdatingKey(key);
+
+    try {
+      await updateNotificationPreferences(next);
+    } catch {
+      setValues(previous);
+    } finally {
+      setUpdatingKey(null);
+    }
+  };
 
   return (
     <div className="rounded-lg border border-border bg-white p-6 md:p-8">
@@ -52,8 +90,9 @@ export default function NotificationPreferences() {
               <Switch
                 id={id}
                 checked={values[item.key]}
+                disabled={isLoading && updatingKey === item.key}
                 onCheckedChange={(checked) =>
-                  setValues((prev) => ({ ...prev, [item.key]: checked }))
+                  handleToggle(item.key, checked === true)
                 }
                 className="data-checked:bg-tertiary"
               />

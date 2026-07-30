@@ -18,8 +18,8 @@ export default function OrderCard({ order }: { order: Order }) {
       </div>
 
       {previewItem ? (
-        <div className="mt-5 flex items-start gap-4">
-          <div className="relative size-16 shrink-0 overflow-hidden rounded-md bg-[#F9F6F2] md:size-20">
+        <div className="mt-5 flex items-center gap-4">
+          <div className="relative shrink-0 overflow-hidden rounded-md bg-[#F9F6F2] md:w-40 md:h-50 w-20 h-25">
             <Image
               src={previewItem.image || "/assets/images/productImage.svg"}
               alt={previewItem.name}
@@ -57,8 +57,7 @@ export default function OrderCard({ order }: { order: Order }) {
         </div>
 
         <Button
-          size="default"
-          className="h-10 gap-2 rounded-md px-4 font-boska-medium uppercase tracking-[1px]"
+          
           nativeButton={false}
           render={<Link href={`/orders/${order.id}`} />}
         >

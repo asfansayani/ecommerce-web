@@ -15,8 +15,6 @@ export default async function Categories() {
     });
     const categories = categoriesData?.data || [];
 
-    console.log(categories, "categories")
-
     return (
         <section className="relative md:pt-20 pt-10 ">
             <div className="container-fluid mb-10">
