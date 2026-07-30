@@ -1,7 +1,7 @@
 import Image from 'next/image'
-import Subtitle from '../ui/Subtitle'
-import SecHd from '../ui/SecHd'
-import LinkButton from '../ui/LinkButton'
+import Subtitle from '@/components/custom-ui/Subtitle'
+import SecHd from '@/components/custom-ui/SecHd'
+import LinkButton from '@/components/custom-ui/LinkButton'
 
 export default function About() {
     return (
@@ -28,7 +28,7 @@ export default function About() {
                 <LinkButton btnTheme="light" className="w-fit mt-5"
                     icon
                     text={"Read our story"}
-                    link={"/about"}
+                    link={"/about-us"}
                 />
             </div>
         </section>

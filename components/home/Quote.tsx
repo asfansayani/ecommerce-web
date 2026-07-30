@@ -1,4 +1,4 @@
-import SecHd from '../ui/SecHd'
+import SecHd from '@/components/custom-ui/SecHd'
 import Image from 'next/image'
 
 export default function Quote() {

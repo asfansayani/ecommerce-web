@@ -1,6 +1,6 @@
 import React from 'react'
-import SecHd from '../ui/SecHd'
-import Subtitle from '../ui/Subtitle'
+import SecHd from '@/components/custom-ui/SecHd'
+import Subtitle from '@/components/custom-ui/Subtitle'
 import CategoryCard from './CategoryCard'
 import { getCategories } from '@/lib/api/categories';
 import { getLocale, getTranslations } from "next-intl/server";

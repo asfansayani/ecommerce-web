@@ -1,5 +1,5 @@
-import SecHd from '../ui/SecHd'
-import Subtitle from '../ui/Subtitle'
+import SecHd from '@/components/custom-ui/SecHd'
+import Subtitle from '@/components/custom-ui/Subtitle'
 import Link from 'next/link'
 import Image from 'next/image'
 import insta from '@/public/assets/images/insta.webp'

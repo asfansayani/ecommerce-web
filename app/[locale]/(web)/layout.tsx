@@ -1,4 +1,5 @@
-import Footer from "@/app/components/common/Footer";
+import Footer from "@/components/common/Footer";
+import Header from "@/components/common/Header";
 
 export default async function WebsiteLayout({
   children,
@@ -11,6 +12,7 @@ export default async function WebsiteLayout({
   const { locale } = await params;
   return (
     <>
+      <Header />
       <main>
         {children}
         <Footer locale={locale} />

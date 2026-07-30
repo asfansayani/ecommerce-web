@@ -1,6 +1,6 @@
-import SecHd from "../ui/SecHd";
-import Subtitle from "../ui/Subtitle";
-import LinkButton from "../ui/LinkButton";
+import SecHd from "@/components/custom-ui/SecHd";
+import Subtitle from "@/components/custom-ui/Subtitle";
+import LinkButton from "@/components/custom-ui/LinkButton";
 import ProductCard from "./ProductCard";
 
 export default function Products() {

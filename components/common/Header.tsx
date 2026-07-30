@@ -5,7 +5,7 @@ import searchIcon from "@/public/assets/images/search.svg"
 import cartIcon from "@/public/assets/images/cart.svg"
 import userIcon from "@/public/assets/images/user.svg"
 import Link from 'next/link'
-import LanguageSwitcher from '../LanguageSwitcher'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 export default function Header() {
     return (

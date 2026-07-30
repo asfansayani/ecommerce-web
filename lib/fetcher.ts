@@ -18,6 +18,9 @@ export async function fetcher(
             next: {
                 revalidate: 10, // 5 minutes
             },
+            headers: {
+                "Authorization": `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjY0LCJkZXZpY2VJZCI6NDYzLCJpYXQiOjE3ODUzMzg3OTEsImV4cCI6MTc4NTQyNTE5MX0.Hlk_TFB_Hadu6anGD-zEM5tHh1Lp41YffMraU9mHONs"}`,
+            }
         }
     );
 

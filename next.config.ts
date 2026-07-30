@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "staging-front.bijou.ae",
       },
+      {
+        protocol: "https",
+        hostname: "suya-cosmetics.s3.me-central-1.amazonaws.com",
+      },
     ],
   },
 };

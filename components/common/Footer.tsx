@@ -1,11 +1,6 @@
 import Image from 'next/image'
-import React from 'react'
 import logo from "@/public/assets/images/footerLogo.svg"
-import searchIcon from "@/public/assets/images/search.svg"
-import cartIcon from "@/public/assets/images/cart.svg"
-import userIcon from "@/public/assets/images/user.svg"
 import Link from 'next/link'
-import LanguageSwitcher from '../LanguageSwitcher'
 import { getCategories } from '@/lib/api/categories'
 import { getTranslations } from 'next-intl/server'
 import { FaInstagram, FaSnapchat } from 'react-icons/fa'

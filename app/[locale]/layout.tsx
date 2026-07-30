@@ -4,7 +4,6 @@ import { getMessages } from "next-intl/server";
 import type { Metadata } from "next";
 import { Cormorant_Garamond, Montserrat } from "next/font/google";
 import "@/app/globals.css";
-import Header from "@/app/components/common/Header";
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
@@ -42,7 +41,6 @@ export default async function RootLayout({
     >
       <body>
         <NextIntlClientProvider messages={messages}>
-          <Header />
           {children}
         </NextIntlClientProvider>
       </body>

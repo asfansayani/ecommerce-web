@@ -1,8 +1,8 @@
 import React from 'react'
 import heroImage from "@/public/assets/images/hero.svg"
 import Image from 'next/image'
-import Subtitle from '../ui/Subtitle'
-import LinkButton from '../ui/LinkButton'
+import Subtitle from '@/components/custom-ui/Subtitle'
+import LinkButton from '@/components/custom-ui/LinkButton'
 import { HiOutlineArrowLongRight } from 'react-icons/hi2'
 import Link from 'next/link'
 
