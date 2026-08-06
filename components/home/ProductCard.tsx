@@ -9,10 +9,10 @@ import { addToWishlist, removeFromWishlist } from "@/lib/api/wishlist";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
-import type { Product } from "@/types/product";
+import type { ApiProduct } from "@/types/product";
 
 type ProductProps = {
-  product: Product;
+  product: ApiProduct;
 };
 
 export default function ProductCard({ product }: ProductProps) {
@@ -74,7 +74,7 @@ export default function ProductCard({ product }: ProductProps) {
   return (
     <Link
       className="group relative flex cursor-pointer flex-col overflow-hidden"
-      href={`/products/${product.id}`}
+      href={`/products/${product.name?.toLowerCase().replace(/ /g, "-")}`}
     >
       <div className="relative aspect-3/4 w-full overflow-hidden bg-[#F9F6F2]">
         <Image
@@ -113,7 +113,7 @@ export default function ProductCard({ product }: ProductProps) {
       </div>
 
       <h3 className="my-3 line-clamp-2 capitalize font-boska-medium text-xl md:text-2xl 2xl:text-4xl">
-        {product.name}
+        {product.name || "Product Name"}
       </h3>
 
       <div className="flex flex-wrap items-center gap-2">

@@ -1,5 +1,6 @@
 import { AuthApiError } from "@/lib/api/auth";
 import { fetcher } from "@/lib/fetcher";
+import { handleUnauthorizedResponse } from "@/lib/session";
 import type { AuthResponse } from "@/types/auth";
 import type { WishlistResponse } from "@/types/wishlist";
 
@@ -36,6 +37,8 @@ async function wishlistRequest(
   }
 
   if (!res.ok) {
+    await handleUnauthorizedResponse(res.status, true);
+
     const message =
       (typeof data?.message === "string" && data.message) ||
       (typeof data?.error === "string" && data.error) ||

@@ -1,4 +1,8 @@
 import { getAccessToken } from "@/lib/auth-cookie";
+import {
+  handleUnauthorizedResponse,
+  SessionExpiredError,
+} from "@/lib/session";
 
 export async function fetcher(
   url: string,
@@ -20,9 +24,12 @@ export async function fetcher(
     headers.set("Authorization", `Bearer ${token}`);
   }
 
+  const hadAuthToken =
+    Boolean(token) || headers.has("Authorization");
+
   const { next: nextOption, cache, ...restOptions } = options ?? {};
   const shouldSkipCache = cache === "no-store";
-
+  console.log(`${url}${params.toString() ? `?${params}` : ""}`);
   const res = await fetch(
     `${url}${params.toString() ? `?${params}` : ""}`,
     {
@@ -35,6 +42,12 @@ export async function fetcher(
   );
 
   if (!res.ok) {
+    await handleUnauthorizedResponse(res.status, hadAuthToken);
+
+    if (res.status === 401 && hadAuthToken) {
+      throw new SessionExpiredError();
+    }
+
     throw new Error(`Request failed (${res.status})`);
   }
 

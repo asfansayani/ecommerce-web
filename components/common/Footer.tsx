@@ -79,7 +79,7 @@ export default async function Footer({ locale }: { locale: string }) {
                                                         ?.name?.toLowerCase()
                                                         .split(" ")
                                                         .join("-")}?id=${item?.id}`}
-                                                    className="hover:underline"
+                                                    className="hover:underline line-clamp-1"
                                                 >
                                                     {translation?.name}
                                                 </Link>

@@ -1,12 +1,23 @@
 import { fetcher } from "@/lib/fetcher";
 import type {
+  ApiProduct,
   CollectionListingResponse,
   ProductsResponse,
+  SingleProductsResponse,
 } from "@/types/product";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const getProducts = async (
+  query?: Record<string, string | number | boolean>
+): Promise<ProductsResponse> => {
+  return fetcher(`${API_URL}/user/product`, query);
+};
+
+export const getProductBySlug = async (slug: string): Promise<SingleProductsResponse> => {
+  return fetcher(`${API_URL}/user/product/${slug}`);
+};
+export const getProductByCategory = async (
   query?: Record<string, string | number | boolean>
 ): Promise<ProductsResponse> => {
   return fetcher(`${API_URL}/user/product`, query);

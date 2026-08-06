@@ -1,4 +1,5 @@
 import { AuthApiError } from "@/lib/api/auth";
+import { handleUnauthorizedResponse } from "@/lib/session";
 import type { AuthResponse, UpdateProfilePayload } from "@/types/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -36,6 +37,8 @@ async function requestUsersApi(
   }
 
   if (!res.ok) {
+    await handleUnauthorizedResponse(res.status, true);
+
     const message =
       (typeof data?.message === "string" && data.message) ||
       (typeof data?.error === "string" && data.error) ||

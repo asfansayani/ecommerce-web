@@ -1,3 +1,4 @@
+import { handleUnauthorizedResponse } from "@/lib/session";
 import type {
   AuthResponse,
   ChangePasswordPayload,
@@ -55,6 +56,8 @@ async function postAuth<T>(
   }
 
   if (!res.ok) {
+    await handleUnauthorizedResponse(res.status, Boolean(token));
+
     const message =
       (typeof data?.message === "string" && data.message) ||
       (typeof data?.error === "string" && data.error) ||

@@ -1,5 +1,6 @@
 import { fetcher } from "@/lib/fetcher";
 import { AuthApiError } from "@/lib/api/auth";
+import { handleUnauthorizedResponse } from "@/lib/session";
 import type {
   OrderDetailResponse,
   OrdersResponse,
@@ -72,6 +73,8 @@ export async function downloadOrderInvoice(
   });
 
   if (!res.ok) {
+    await handleUnauthorizedResponse(res.status, true);
+
     let message = `Request failed (${res.status})`;
     try {
       const data = await res.json();

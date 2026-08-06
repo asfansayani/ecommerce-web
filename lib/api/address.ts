@@ -1,5 +1,6 @@
 import { AuthApiError } from "@/lib/api/auth";
 import { fetcher } from "@/lib/fetcher";
+import { handleUnauthorizedResponse } from "@/lib/session";
 import type {
   AddressPayload,
   AddressResponse,
@@ -55,6 +56,8 @@ async function addressRequest<T>(
   }
 
   if (!res.ok) {
+    await handleUnauthorizedResponse(res.status, true);
+
     const message =
       (typeof data?.message === "string" && data.message) ||
       (typeof data?.error === "string" && data.error) ||

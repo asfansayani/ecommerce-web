@@ -12,26 +12,17 @@ import { getTranslation } from "@/lib/helpers/getTranslation";
 import {
   normalizeCollectionProducts,
   normalizeProduct,
-  type Product,
+  type ApiProduct,
 } from "@/types/product";
 import { getLocale } from "next-intl/server";
+import { localizeProducts } from "@/lib/utils";
 
-function localizeProducts(products: Product[], locale: string) {
-  return products.map((product) => {
-    const translation = getTranslation(product.translations, locale);
-    return {
-      ...product,
-      name: translation?.name ?? product.name,
-      description: translation?.description ?? product.description,
-    };
-  });
-}
 
 export default async function Home() {
   const locale = await getLocale();
 
-  let newArrivals: Product[] = [];
-  let bestSelling: Product[] = [];
+  let newArrivals: ApiProduct[] = [];
+  let bestSelling: ApiProduct[] = [];
 
   try {
     const [newArrivalsResponse, bestSellingResponse] = await Promise.all([

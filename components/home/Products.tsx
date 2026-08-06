@@ -2,12 +2,12 @@ import SecHd from "@/components/custom-ui/SecHd";
 import Subtitle from "@/components/custom-ui/Subtitle";
 import LinkButton from "@/components/custom-ui/LinkButton";
 import ProductCard from "./ProductCard";
-import type { Product } from "@/types/product";
+import type { ApiProduct } from "@/types/product";
 
 type ProductsSectionProps = {
   subtitle: string;
   title: string;
-  products: Product[];
+  products: ApiProduct[];
   exploreHref?: string;
 };
 

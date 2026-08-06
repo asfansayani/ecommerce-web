@@ -44,7 +44,7 @@ export default function HeaderWishlistIcon() {
       >
         <Heart
           className={cn(
-            "size-7",
+            "size-5.5",
             hasItems && "fill-[#A37C43] text-[#A37C43]"
           )}
         />

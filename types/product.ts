@@ -47,13 +47,19 @@ export interface ProductsResponse {
   data: ApiProduct[];
   meta?: Pagination;
 }
+export interface SingleProductsResponse {
+  data: {
+    product: ApiProduct;
+    relatedProducts: ApiProduct[];
+  };
+}
 
 export interface CollectionListingResponse {
   data: CollectionListingItem[];
   meta?: Pagination;
 }
 
-export function normalizeProduct(product: ApiProduct): Product {
+export function normalizeProduct(product: ApiProduct): ApiProduct {
   return {
     id: product.id,
     slug: product.slug,
@@ -72,7 +78,7 @@ export function normalizeProduct(product: ApiProduct): Product {
 
 export function normalizeCollectionProducts(
   items: CollectionListingItem[] = []
-): Product[] {
+): ApiProduct[] {
   return items
     .map((item) => item.product)
     .filter((product): product is ApiProduct => Boolean(product))
