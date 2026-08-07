@@ -9,4 +9,5 @@ export interface Translations {
   description?: string;
   language: string;
   id: number;
+  code?: string | null;
 }

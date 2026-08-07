@@ -1,10 +1,10 @@
 import Image from "next/image";
 import logo from "@/public/assets/images/logo.svg";
 import searchIcon from "@/public/assets/images/search.svg";
-import cartIcon from "@/public/assets/images/cart.svg";
 import Link from "next/link";
 import HeaderUserMenu from "@/components/common/HeaderUserMenu";
 import HeaderWishlistIcon from "@/components/common/HeaderWishlistIcon";
+import HeaderCartIcon from "@/components/common/HeaderCartIcon";
 
 export default function Header() {
   return (
@@ -35,11 +35,7 @@ export default function Header() {
               </Link>
             </li>
             <HeaderWishlistIcon />
-            <li>
-              <Link href={"/"}>
-                <Image src={cartIcon} alt="Cart" />
-              </Link>
-            </li>
+            <HeaderCartIcon />
             <li>
               <HeaderUserMenu />
             </li>

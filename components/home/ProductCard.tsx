@@ -71,10 +71,13 @@ export default function ProductCard({ product }: ProductProps) {
     }
   };
 
+  const productSlug =
+    product.slug || product.name?.toLowerCase().replace(/ /g, "-") || "product";
+
   return (
     <Link
       className="group relative flex cursor-pointer flex-col overflow-hidden"
-      href={`/products/${product.name?.toLowerCase().replace(/ /g, "-")}`}
+      href={`/products/${productSlug}?id=${product.id}`}
     >
       <div className="relative aspect-3/4 w-full overflow-hidden bg-[#F9F6F2]">
         <Image

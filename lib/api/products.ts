@@ -14,8 +14,10 @@ export const getProducts = async (
   return fetcher(`${API_URL}/user/product`, query);
 };
 
-export const getProductBySlug = async (slug: string): Promise<SingleProductsResponse> => {
-  return fetcher(`${API_URL}/user/product/${slug}`);
+export const getProductById = async (
+  id: string | number
+): Promise<SingleProductsResponse> => {
+  return fetcher(`${API_URL}/public/product/${id}`);
 };
 export const getProductByCategory = async (
   query?: Record<string, string | number | boolean>

@@ -1,8 +1,9 @@
+import ProductsNotFound from "@/components/common/ProductsNotFound";
 import PaginationControls from "@/components/dashboard/PaginationControls";
 import ProductCard from "@/components/home/ProductCard";
 import Sort from "@/components/ui/sort";
 import { getCategories } from "@/lib/api/categories";
-import { getProductByCategory, getProducts } from "@/lib/api/products";
+import { getProductByCategory } from "@/lib/api/products";
 import { localizeProducts } from "@/lib/utils";
 
 export default async function Page(
@@ -55,35 +56,39 @@ export default async function Page(
 
 
     const products = localizeProducts(productsResponse ?? [], locale);
-    console.log(productsResponse);
     const totalPages = Math.max(1, meta?.totalPages ?? 1);
+
+    const isEmpty = products.length === 0;
 
     return (
         <div>
             <div className="flex justify-between items-center mb-4 gap-3">
                 <h2 className="text-2xl font-bold capitalize">{slug?.[slug.length - 1] ?? 'Products'}</h2>
-                <p className="text-sm text-gray-500 capitalize ms-auto shrink-0">
-                    showing {PAGE_SIZE * (requestedPage - 1) + 1}-{Math.min(PAGE_SIZE * requestedPage, meta?.total ?? 0)} of {meta?.total ?? 0} products
-                </p>
+                {!isEmpty && (
+                    <p className="text-sm text-gray-500 capitalize ms-auto shrink-0">
+                        showing {PAGE_SIZE * (requestedPage - 1) + 1}-{Math.min(PAGE_SIZE * requestedPage, meta?.total ?? 0)} of {meta?.total ?? 0} products
+                    </p>
+                )}
                 <Sort sort={sort} />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                ))}
-            </div>
-            {products.length === 0 && (
-                <div className="mt-10">
-                    <p className="text-center text-gray-500">Products not found</p>
-                </div>
+            {isEmpty ? (
+                <ProductsNotFound />
+            ) : (
+                <>
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {products.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))}
+                    </div>
+                    <div className="mt-10">
+                        <PaginationControls
+                            currentPage={requestedPage}
+                            totalPages={totalPages}
+                            basePath={basePath}
+                        />
+                    </div>
+                </>
             )}
-            <div className="mt-10">
-                <PaginationControls
-                    currentPage={requestedPage}
-                    totalPages={totalPages}
-                    basePath={basePath}
-                />
-            </div>
         </div>
     )
 }

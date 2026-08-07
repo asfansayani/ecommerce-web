@@ -2,6 +2,12 @@ import { fetcher } from "@/lib/fetcher";
 import { AuthApiError } from "@/lib/api/auth";
 import { handleUnauthorizedResponse } from "@/lib/session";
 import type {
+  ValidateCartItemsPayload,
+  ValidateCartItemsResponse,
+} from "@/types/cart";
+import type {
+  CreateOrderPayload,
+  CreateOrderResponse,
   OrderDetailResponse,
   OrdersResponse,
   TrackOrderPayload,
@@ -54,6 +60,84 @@ export async function trackOrder(
   }
 
   return data as TrackOrderResponse;
+}
+
+export async function validateCartItems(
+  payload: ValidateCartItemsPayload
+): Promise<ValidateCartItemsResponse> {
+  if (!API_URL) {
+    throw new Error("API URL is not configured");
+  }
+
+  const res = await fetch(`${API_URL}/public/orders/validate-cart-items`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  let data: Record<string, unknown> | null = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
+  if (!res.ok) {
+    const message =
+      (typeof data?.message === "string" && data.message) ||
+      (typeof data?.error === "string" && data.error) ||
+      `Request failed (${res.status})`;
+    throw new AuthApiError(message, res.status);
+  }
+
+  return data as ValidateCartItemsResponse;
+}
+
+export async function createOrder(
+  payload: CreateOrderPayload,
+  token?: string | null
+): Promise<CreateOrderResponse> {
+  if (!API_URL) {
+    throw new Error("API URL is not configured");
+  }
+
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_URL}/public/orders`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  let data: Record<string, unknown> | null = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
+  if (!res.ok) {
+    if (token) {
+      await handleUnauthorizedResponse(res.status, true);
+    }
+    const message =
+      (typeof data?.message === "string" && data.message) ||
+      (typeof data?.error === "string" && data.error) ||
+      `Request failed (${res.status})`;
+    throw new AuthApiError(message, res.status);
+  }
+
+  return data as CreateOrderResponse;
 }
 
 export async function downloadOrderInvoice(

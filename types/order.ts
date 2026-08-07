@@ -157,6 +157,120 @@ export type TrackOrderResponse = {
   data?: ApiOrder;
 };
 
+export type CreateOrderAddress = {
+  firstName: string;
+  lastName: string;
+  addressLine1: string;
+  addressLine2?: string;
+  country: string;
+  city: string;
+  postalCode: string;
+  phone: string;
+  email: string;
+};
+
+export type CreateOrderCartItem = {
+  productId: number;
+  quantity: number;
+  selections?: {
+    variantId: number;
+    variantValueId: number;
+  }[];
+};
+
+/** Online card payment — gateway returns a redirect URL */
+export type CreateOrderPaymentMethod = "PAYMENNT" | "CASH_ON_DELIVERY";
+
+export type CreateOrderPayload = {
+  shippingAddress: CreateOrderAddress;
+  billingAddress?: CreateOrderAddress;
+  isBillingAddSameAsShippingAdd: boolean;
+  notes?: string;
+  email: string;
+  cartItems: CreateOrderCartItem[];
+  paymentMethod: CreateOrderPaymentMethod;
+  couponCode?: string;
+};
+
+export type CreateOrderResponse = {
+  success?: boolean;
+  statusCode?: number;
+  message?: string;
+  data?: {
+    id?: number | string;
+    orderNumber?: string;
+    url?: string;
+    paymentUrl?: string;
+    redirectUrl?: string;
+    paymentLink?: string;
+    checkoutUrl?: string;
+    payment?: {
+      url?: string;
+      paymentUrl?: string;
+      redirectUrl?: string;
+    };
+    [key: string]: unknown;
+  };
+  meta?: {
+    url?: string;
+    paymentUrl?: string;
+    redirectUrl?: string;
+    [key: string]: unknown;
+  };
+};
+
+/** Pull payment redirect URL from common response shapes */
+export function extractOrderPaymentUrl(
+  response: CreateOrderResponse
+): string | null {
+  const preferred: unknown[] = [
+    response.data?.url,
+    response.data?.paymentUrl,
+    response.data?.redirectUrl,
+    response.data?.paymentLink,
+    response.data?.checkoutUrl,
+    response.data?.payment?.url,
+    response.data?.payment?.paymentUrl,
+    response.data?.payment?.redirectUrl,
+    response.meta?.url,
+    response.meta?.paymentUrl,
+    response.meta?.redirectUrl,
+  ];
+
+  for (const value of preferred) {
+    if (typeof value === "string" && /^https?:\/\//i.test(value.trim())) {
+      return value.trim();
+    }
+  }
+
+  // Fallback: key names that look like payment / redirect URLs
+  const stack: Array<Record<string, unknown>> = [];
+  if (response.data && typeof response.data === "object") {
+    stack.push(response.data as Record<string, unknown>);
+  }
+  if (response.meta && typeof response.meta === "object") {
+    stack.push(response.meta as Record<string, unknown>);
+  }
+
+  while (stack.length) {
+    const current = stack.pop()!;
+    for (const [key, value] of Object.entries(current)) {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        stack.push(value as Record<string, unknown>);
+        continue;
+      }
+      if (typeof value !== "string") continue;
+      const looksLikePaymentKey =
+        /url|link|redirect|checkout|payment/i.test(key);
+      if (looksLikePaymentKey && /^https?:\/\//i.test(value.trim())) {
+        return value.trim();
+      }
+    }
+  }
+
+  return null;
+}
+
 const STATUS_MAP: Record<string, OrderStatus> = {
   unpaid: "unpaid",
   paid: "processing",
