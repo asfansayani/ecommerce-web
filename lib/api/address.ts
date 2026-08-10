@@ -1,4 +1,5 @@
 import { AuthApiError } from "@/lib/api/auth";
+import { buildApiHeaders } from "@/lib/api-headers";
 import { fetcher } from "@/lib/fetcher";
 import { handleUnauthorizedResponse } from "@/lib/session";
 import type {
@@ -33,14 +34,10 @@ async function addressRequest<T>(
     throw new Error("API URL is not configured");
   }
 
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: `Bearer ${token}`,
-  };
-
-  if (body !== undefined) {
-    headers["Content-Type"] = "application/json";
-  }
+  const headers = await buildApiHeaders({
+    token,
+    json: body !== undefined,
+  });
 
   const res = await fetch(`${API_URL}${path}`, {
     method,

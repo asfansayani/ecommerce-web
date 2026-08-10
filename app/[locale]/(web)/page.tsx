@@ -35,7 +35,9 @@ export default async function Home() {
       locale
     );
     bestSelling = localizeProducts(
-      (bestSellingResponse?.data ?? []).map(normalizeProduct),
+      (bestSellingResponse?.data ?? []).map((product) =>
+        normalizeProduct(product, locale)
+      ),
       locale
     );
   } catch {

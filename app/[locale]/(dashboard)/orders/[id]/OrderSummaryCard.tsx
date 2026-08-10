@@ -1,4 +1,7 @@
+"use client";
+
 import type { OrderDetail } from "@/types/order";
+import { useCurrencyCode } from "@/hooks/useCurrencyCode";
 import OrderStatusBadge from "../OrderStatusBadge";
 
 function SummaryRow({
@@ -29,6 +32,8 @@ function SummaryRow({
 }
 
 export default function OrderSummaryCard({ order }: { order: OrderDetail }) {
+  const currency = useCurrencyCode();
+
   return (
     <section className="rounded-lg border border-border bg-white p-5 md:p-6">
       <div className="flex items-center justify-between gap-3">
@@ -45,11 +50,18 @@ export default function OrderSummaryCard({ order }: { order: OrderDetail }) {
           value={order.trackingId || "-"}
         />
         <SummaryRow label="Placed on" value={order.placedOn} />
-        <SummaryRow label="Subtotal" value={`AED ${order.subtotal}`} />
+        <SummaryRow label="Subtotal" value={`${currency} ${order.subtotal}`} />
         <SummaryRow label="VAT" value={order.vat} />
-        <SummaryRow label="Shipping Fee" value={`AED ${order.shippingFee}`} />
+        <SummaryRow
+          label="Shipping Fee"
+          value={`${currency} ${order.shippingFee}`}
+        />
         <SummaryRow label="Payment Method" value={order.paymentMethod} />
-        <SummaryRow label="Total" value={`AED ${order.totalAmount}`} bold />
+        <SummaryRow
+          label="Total"
+          value={`${currency} ${order.totalAmount}`}
+          bold
+        />
       </div>
     </section>
   );

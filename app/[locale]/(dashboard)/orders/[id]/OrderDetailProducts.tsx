@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useCurrencyCode } from "@/hooks/useCurrencyCode";
 import type { OrderItem } from "@/types/order";
 
 export default function OrderDetailProducts({
@@ -6,6 +9,8 @@ export default function OrderDetailProducts({
 }: {
   items: OrderItem[];
 }) {
+  const currency = useCurrencyCode();
+
   return (
     <div className="space-y-4">
       {items.map((item) => (
@@ -32,7 +37,7 @@ export default function OrderDetailProducts({
               </p>
             </div>
             <p className="shrink-0 text-sm text-primary md:text-base">
-              AED {item.price}
+              {currency} {item.price}
             </p>
           </div>
         </div>

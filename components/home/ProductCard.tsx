@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import { Link } from "@/i18n/navigation";
 import { addToWishlist, removeFromWishlist } from "@/lib/api/wishlist";
 import { cn } from "@/lib/utils";
+import { useCurrencyCode } from "@/hooks/useCurrencyCode";
 import { useAuthStore } from "@/store/authStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 import type { ApiProduct } from "@/types/product";
+
 
 type ProductProps = {
   product: ApiProduct;
@@ -26,6 +28,7 @@ export default function ProductCard({ product }: ProductProps) {
     setIsWishlisted(product.isWishlisted);
   }, [product.isWishlisted]);
 
+  const currency = useCurrencyCode(product.currency);
   const specialOffer = product.specialOffer;
   const hasOffer = Boolean(specialOffer);
   const displayPrice = hasOffer
@@ -121,11 +124,11 @@ export default function ProductCard({ product }: ProductProps) {
 
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-[12px] font-medium text-tertiary md:text-base 2xl:text-xl">
-          AED {displayPrice}
+          {currency} {displayPrice}
         </p>
         {hasOffer ? (
           <p className="text-[11px] text-gray-400 line-through md:text-sm">
-            AED {product.price}
+            {currency} {product.price}
           </p>
         ) : null}
       </div>

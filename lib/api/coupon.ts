@@ -1,4 +1,5 @@
 import { AuthApiError } from "@/lib/api/auth";
+import { buildApiHeaders } from "@/lib/api-headers";
 import type {
   ValidateCouponPayload,
   ValidateCouponResponse,
@@ -13,12 +14,11 @@ export async function validateCoupon(
     throw new Error("API URL is not configured");
   }
 
+  const headers = await buildApiHeaders({ token: null, json: true });
+
   const res = await fetch(`${API_URL}/public/coupon/validate-coupon`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 

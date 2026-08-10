@@ -1,4 +1,5 @@
 import { handleUnauthorizedResponse } from "@/lib/session";
+import { buildApiHeaders } from "@/lib/api-headers";
 import type {
   AuthResponse,
   ChangePasswordPayload,
@@ -30,17 +31,10 @@ async function postAuth<T>(
     throw new Error("API URL is not configured");
   }
 
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-  };
-
-  if (body !== undefined) {
-    headers["Content-Type"] = "application/json";
-  }
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  const headers = await buildApiHeaders({
+    token: token ?? null,
+    json: body !== undefined,
+  });
 
   const res = await fetch(`${API_URL}${path}`, {
     method: "POST",

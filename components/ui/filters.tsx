@@ -1,51 +1,213 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "next-intl";
+import { useSearchParams } from "next/navigation";
+import { ChevronRight, SlidersHorizontal } from "lucide-react";
+import { Link, usePathname, useRouter } from "@/i18n/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { getCategories } from "@/lib/api/categories";
+import {
+  findCategoryBySlug,
+  getCategoryChildren,
+  getCategoryDisplayName,
+  getCategorySlug,
+  toCategorySlug,
+} from "@/lib/category-slug";
+import { cn } from "@/lib/utils";
+import type { Category } from "@/types/category";
 
-const COLORS = [
-  { value: "amber", className: "bg-amber-400" },
-  { value: "black", className: "bg-black" },
-  { value: "gray", className: "bg-gray-500" },
-  { value: "blue", className: "bg-blue-500" },
-  { value: "green", className: "bg-green-500" },
-  { value: "purple", className: "bg-purple-500" },
-  { value: "red", className: "bg-red-500" },
-  { value: "orange", className: "bg-orange-500" },
-  { value: "pink", className: "bg-pink-500" },
-  { value: "teal", className: "bg-teal-500" },
-] as const;
+function getCollectionSlugs(pathname: string): string[] {
+  const parts = pathname.split("/").filter(Boolean);
+  const collectionsIndex = parts.indexOf("collections");
+  if (collectionsIndex === -1) return [];
+  return parts.slice(collectionsIndex + 1).map(toCategorySlug);
+}
 
-const SIZES = [
-  { value: "xx-small", label: "XX-Small" },
-  { value: "x-small", label: "X-Small" },
-  { value: "small", label: "Small" },
-  { value: "medium", label: "Medium" },
-  { value: "large", label: "Large" },
-  { value: "x-large", label: "X-Large" },
-  { value: "xx-large", label: "XX-Large" },
-] as const;
+type CategoryTreeItemProps = {
+  category: Category;
+  locale: string;
+  hrefBase: string;
+  activeSlugs: string[];
+  parentSlugs: string[];
+  depth?: number;
+  onNavigate?: () => void;
+};
 
-export default function Filters() {
+function CategoryTreeItem({
+  category,
+  locale,
+  hrefBase,
+  activeSlugs,
+  parentSlugs,
+  depth = 0,
+  onNavigate,
+}: CategoryTreeItemProps) {
+  const slug = getCategorySlug(category);
+  const pathSlugs = [...parentSlugs, slug];
+  const children = getCategoryChildren(category);
+  const hasChildren = children.length > 0;
+
+  const isActive =
+    activeSlugs.length === pathSlugs.length &&
+    pathSlugs.every((s, i) => s === activeSlugs[i]);
+
+  const [open, setOpen] = useState(true);
+  const href = `${hrefBase}/${pathSlugs.join("/")}`;
+
+  return (
+    <li>
+      <div className="flex items-center gap-1">
+        <Link
+          href={href}
+          onClick={onNavigate}
+          className={cn(
+            "min-w-0 flex-1 capitalize transition-colors hover:text-primary",
+            isActive ? "font-medium text-primary" : "text-gray-500"
+          )}
+          style={
+            depth > 0
+              ? { paddingInlineStart: `${depth * 0.75}rem` }
+              : undefined
+          }
+        >
+          {getCategoryDisplayName(category, locale)}
+        </Link>
+        {hasChildren ? (
+          <button
+            type="button"
+            aria-label={open ? "Collapse" : "Expand"}
+            aria-expanded={open}
+            className="inline-flex size-6 shrink-0 items-center justify-center rounded text-gray-400 transition hover:text-primary"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <ChevronRight
+              className={cn(
+                "size-4 transition-transform duration-200",
+                open && "rotate-90"
+              )}
+            />
+          </button>
+        ) : null}
+      </div>
+
+      {hasChildren && open ? (
+        <ul className="mt-2 space-y-2">
+          {children.map((child) => (
+            <CategoryTreeItem
+              key={child.id}
+              category={child}
+              locale={locale}
+              hrefBase={hrefBase}
+              activeSlugs={activeSlugs}
+              parentSlugs={pathSlugs}
+              depth={depth + 1}
+              onNavigate={onNavigate}
+            />
+          ))}
+        </ul>
+      ) : null}
+    </li>
+  );
+}
+
+type FiltersPanelProps = {
+  showTitle?: boolean;
+  className?: string;
+  scrollClassName?: string;
+  onNavigate?: () => void;
+  idPrefix?: string;
+};
+
+function FiltersPanel({
+  showTitle = true,
+  className,
+  scrollClassName,
+  onNavigate,
+  idPrefix = "",
+}: FiltersPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const locale = useLocale();
 
-  const selectedColor = searchParams.get("color") ?? "";
-  const selectedSize = searchParams.get("size") ?? "";
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  function updateFilter(key: "color" | "size", value: string | null) {
+  const priceMinParam = searchParams.get("priceMin") ?? "";
+  const priceMaxParam = searchParams.get("priceMax") ?? "";
+  const specialOffer = searchParams.get("specialOffer") === "true";
+
+  const [priceMin, setPriceMin] = useState(priceMinParam);
+  const [priceMax, setPriceMax] = useState(priceMaxParam);
+
+  useEffect(() => {
+    setPriceMin(priceMinParam);
+    setPriceMax(priceMaxParam);
+  }, [priceMinParam, priceMaxParam]);
+
+  const slugPath = useMemo(() => getCollectionSlugs(pathname), [pathname]);
+  const mainSlug = slugPath[0] ?? "";
+  const activeNestedSlugs = slugPath.slice(1);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      setIsLoading(true);
+      try {
+        const response = await getCategories({
+          depth: 10,
+          limit: 999,
+        });
+        if (!cancelled) {
+          setCategories(response?.data ?? []);
+        }
+      } catch {
+        if (!cancelled) setCategories([]);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const mainCategory = useMemo(
+    () => findCategoryBySlug(categories, mainSlug),
+    [categories, mainSlug]
+  );
+
+  const isMainCategoriesView = !mainSlug;
+  const categoryList = isMainCategoriesView
+    ? categories
+    : getCategoryChildren(mainCategory);
+
+  const hrefBase = isMainCategoriesView
+    ? "/shop/products"
+    : `/shop/products/${mainSlug}`;
+  const activeSlugs = isMainCategoriesView
+    ? mainSlug
+      ? [mainSlug]
+      : []
+    : activeNestedSlugs;
+
+  function updateSearchParam(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (!value) {
+    if (value == null || value === "") {
       params.delete(key);
     } else {
       params.set(key, value);
@@ -57,93 +219,185 @@ export default function Filters() {
     router.push(query ? `${pathname}?${query}` : pathname);
   }
 
+  function applyPriceFilter(nextMin: string, nextMax: string) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    const min = nextMin.trim();
+    const max = nextMax.trim();
+
+    if (!min) params.delete("priceMin");
+    else params.set("priceMin", min);
+
+    if (!max) params.delete("priceMax");
+    else params.set("priceMax", max);
+
+    params.set("page", "1");
+
+    const query = params.toString();
+    router.push(query ? `${pathname}?${query}` : pathname);
+  }
+
+  function onPriceBlur() {
+    const currentMin = priceMinParam;
+    const currentMax = priceMaxParam;
+    if (priceMin === currentMin && priceMax === currentMax) return;
+    applyPriceFilter(priceMin, priceMax);
+  }
+
+  function onPriceKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      e.currentTarget.blur();
+    }
+  }
+
+  const priceMinId = `${idPrefix}price-min`;
+  const priceMaxId = `${idPrefix}price-max`;
+  const specialOfferId = `${idPrefix}special-offer`;
+
   return (
-    <div className="border rounded-2xl p-5">
-      <h3 className="text-lg font-medium pb-3">Filters</h3>
-      <div className="max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar divide-y divide-gray-200">
+    <div className={cn("border rounded-2xl p-5", className)}>
+      {showTitle ? (
+        <h3 className="text-lg font-medium pb-3">Filters</h3>
+      ) : null}
+      <div
+        className={cn(
+          "max-h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar divide-y divide-gray-200",
+          scrollClassName
+        )}
+      >
+        {isLoading || categoryList.length === 0 ? null : (
+          <div className="py-3">
+            <ul className="space-y-2 text-sm">
+              {categoryList.map((item) => (
+                <CategoryTreeItem
+                  key={item.id}
+                  category={item}
+                  locale={locale}
+                  hrefBase={hrefBase}
+                  activeSlugs={activeSlugs}
+                  parentSlugs={[]}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
+
         <div className="py-3">
-          <ul className="text-sm text-gray-500 space-y-2">
-            <li>
-              <Link href="/shop/collections/all">T-Shirts</Link>
-            </li>
-            <li>
-              <Link href="/shop/collections/all">Hoodies</Link>
-            </li>
-            <li>
-              <Link href="/shop/collections/all">Sweatshirts</Link>
-            </li>
-            <li>
-              <Link href="/shop/collections/all">Jackets</Link>
-            </li>
-            <li>
-              <Link href="/shop/collections/all">Pants</Link>
-            </li>
-            <li>
-              <Link href="/shop/collections/all">Shoes</Link>
-            </li>
-          </ul>
+          <label
+            htmlFor={specialOfferId}
+            className="flex cursor-pointer items-center gap-2.5 text-sm"
+          >
+            <Checkbox
+              id={specialOfferId}
+              checked={specialOffer}
+              onCheckedChange={(checked) =>
+                updateSearchParam(
+                  "specialOffer",
+                  checked === true ? "true" : "false"
+                )
+              }
+            />
+            <span className="font-medium">Discount Products</span>
+          </label>
         </div>
 
         <div className="py-3">
-          <Accordion defaultValue={["colors"]} className="max-w-lg">
-            <AccordionItem value="colors">
-              <AccordionTrigger>Colors</AccordionTrigger>
-              <AccordionContent>
-                <RadioGroup
-                  value={selectedColor}
-                  onValueChange={(value) => updateFilter("color", value)}
-                  className="w-fit flex flex-wrap pt-2"
-                >
-                  {COLORS.map((color, index) => (
-                    <div key={color.value} className="flex items-center">
-                      <RadioGroupItem
-                        value={color.value}
-                        id={`color-${index}`}
-                        className="sr-only size-0 border-0 absolute"
-                      />
-                      <Label
-                        htmlFor={`color-${index}`}
-                        className={`${color.className} border border-black/20 w-7 h-7 rounded-full cursor-pointer peer-data-checked:border-black peer-data-checked:ring-2 peer-data-checked:ring-black peer-data-checked:ring-offset-1`}
-                      />
-                    </div>
-                  ))}
-                </RadioGroup>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
-
-        <div className="py-3">
-          <Accordion defaultValue={["sizes"]} className="max-w-lg">
-            <AccordionItem value="sizes">
-              <AccordionTrigger>Size</AccordionTrigger>
-              <AccordionContent>
-                <RadioGroup
-                  value={selectedSize}
-                  onValueChange={(value) => updateFilter("size", value)}
-                  className="w-fit flex flex-wrap"
-                >
-                  {SIZES.map((size, index) => (
-                    <div key={size.value} className="flex items-center">
-                      <RadioGroupItem
-                        value={size.value}
-                        id={`size-${index}`}
-                        className="sr-only size-0 border-0 absolute"
-                      />
-                      <Label
-                        htmlFor={`size-${index}`}
-                        className="bg-[#F0F0F0] rounded-full cursor-pointer peer-data-checked:bg-black peer-data-checked:text-white py-2 px-4"
-                      >
-                        {size.label}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <p className="mb-3 text-sm font-medium">Price</p>
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Label htmlFor={priceMinId} className="text-xs text-gray-500">
+                Min
+              </Label>
+              <Input
+                id={priceMinId}
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
+                placeholder="0"
+                value={priceMin}
+                onChange={(e) => setPriceMin(e.target.value)}
+                onBlur={onPriceBlur}
+                onKeyDown={onPriceKeyDown}
+                className="h-9"
+              />
+            </div>
+            <span className="mt-6 shrink-0 text-gray-400">–</span>
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <Label htmlFor={priceMaxId} className="text-xs text-gray-500">
+                Max
+              </Label>
+              <Input
+                id={priceMaxId}
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
+                placeholder="Any"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                onBlur={onPriceBlur}
+                onKeyDown={onPriceKeyDown}
+                className="h-9"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
+}
+
+export function MobileFilters() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const searchKey = searchParams.toString();
+
+  useEffect(() => {
+    setSheetOpen(false);
+  }, [pathname, searchKey]);
+
+  return (
+    <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+      <SheetTrigger
+        render={
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="shrink-0 border-border bg-white"
+            aria-label="Filters"
+          />
+        }
+      >
+        <SlidersHorizontal className="size-4" />
+      </SheetTrigger>
+      <SheetContent
+        side="bottom"
+        className="flex max-h-[85dvh] flex-col gap-0 rounded-t-2xl p-0 pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="mx-auto mt-3 h-1.5 w-12 shrink-0 rounded-full bg-muted" />
+        <SheetHeader className="border-b border-border px-5 py-3 text-start">
+          <SheetTitle className="text-lg">Filters</SheetTitle>
+        </SheetHeader>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
+          <FiltersPanel
+            showTitle={false}
+            className="border-0 p-0"
+            scrollClassName="max-h-none"
+            idPrefix="mobile-"
+            onNavigate={() => setSheetOpen(false)}
+          />
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/** Desktop sticky sidebar filters */
+export default function Filters() {
+  return <FiltersPanel idPrefix="desktop-" />;
 }

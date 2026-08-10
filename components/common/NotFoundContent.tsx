@@ -34,7 +34,7 @@ export default function NotFoundContent() {
             variant="outline"
             size="lg"
             nativeButton={false}
-            render={<Link href="/shop/collections" />}
+            render={<Link href="/shop/products" />}
             className="h-12 w-full rounded-md border-primary/80 bg-transparent px-7 text-xs font-semibold uppercase tracking-[0.12em] text-primary hover:bg-primary/5 sm:w-auto"
           >
             Browse Shop

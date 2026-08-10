@@ -1,5 +1,6 @@
 import { fetcher } from "@/lib/fetcher";
 import { AuthApiError } from "@/lib/api/auth";
+import { buildApiHeaders } from "@/lib/api-headers";
 import { handleUnauthorizedResponse } from "@/lib/session";
 import type {
   ValidateCartItemsPayload,
@@ -35,12 +36,11 @@ export async function trackOrder(
     throw new Error("API URL is not configured");
   }
 
+  const headers = await buildApiHeaders({ token: null, json: true });
+
   const res = await fetch(`${API_URL}/public/orders/track`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 
@@ -69,12 +69,11 @@ export async function validateCartItems(
     throw new Error("API URL is not configured");
   }
 
+  const headers = await buildApiHeaders({ token: null, json: true });
+
   const res = await fetch(`${API_URL}/public/orders/validate-cart-items`, {
     method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
+    headers,
     body: JSON.stringify(payload),
   });
 
@@ -104,14 +103,10 @@ export async function createOrder(
     throw new Error("API URL is not configured");
   }
 
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
+  const headers = await buildApiHeaders({
+    token: token ?? null,
+    json: true,
+  });
 
   const res = await fetch(`${API_URL}/public/orders`, {
     method: "POST",
@@ -148,12 +143,14 @@ export async function downloadOrderInvoice(
     throw new Error("API URL is not configured");
   }
 
+  const headers = await buildApiHeaders({
+    token,
+    accept: "application/pdf,application/octet-stream,*/*",
+  });
+
   const res = await fetch(`${API_URL}/user/orders/${id}/invoice/download`, {
     method: "GET",
-    headers: {
-      Accept: "application/pdf,application/octet-stream,*/*",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
   });
 
   if (!res.ok) {

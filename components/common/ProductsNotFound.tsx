@@ -30,7 +30,7 @@ export default function ProductsNotFound({
       <Button
         size="lg"
         nativeButton={false}
-        render={<Link href="/shop/collections" />}
+        render={<Link href="/shop/products" />}
         className="mt-8 h-11 rounded-md bg-tertiary px-7 text-xs font-semibold uppercase tracking-[0.12em] text-white hover:bg-tertiary/90"
       >
         Browse All Products

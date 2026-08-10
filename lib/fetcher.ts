@@ -1,4 +1,5 @@
 import { getAccessToken } from "@/lib/auth-cookie";
+import { getCurrency } from "@/lib/currency-cookie";
 import {
   handleUnauthorizedResponse,
   SessionExpiredError,
@@ -18,10 +19,15 @@ export async function fetcher(
   }
 
   const token = await getAccessToken();
+  const currency = await getCurrency();
   const headers = new Headers(options?.headers);
 
   if (token && !headers.has("Authorization")) {
     headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  if (!headers.has("X-Currency")) {
+    headers.set("X-Currency", currency);
   }
 
   const hadAuthToken =

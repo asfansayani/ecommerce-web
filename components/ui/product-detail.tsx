@@ -10,10 +10,12 @@ import { Label } from "./label";
 import { Button } from "./button";
 import RelatedProducts from "../website/related-products";
 import ProductImageGallery from "./product-image-gallery";
+import { useCurrencyCode } from "@/hooks/useCurrencyCode";
 import { useCartStore } from "@/store/cartStore";
 import { getTranslation } from "@/lib/helpers/getTranslation";
 import type { CartVariantSelection } from "@/types/cart";
 import type { ApiProduct } from "@/types/product";
+
 
 export default function ProductDetail({
   slug,
@@ -25,6 +27,7 @@ export default function ProductDetail({
   relatedProducts: ApiProduct[];
 }) {
   const locale = useLocale();
+  const currency = useCurrencyCode(product.currency);
   const addItem = useCartStore((s) => s.addItem);
   const [quantity, setQuantity] = useState(1);
   const [selectedValues, setSelectedValues] = useState<Record<number, number>>(
@@ -202,10 +205,10 @@ export default function ProductDetail({
 
           <div className="flex items-center gap-2">
             <h5 className="text-2xl font-semibold">
-              AED {displayPrice}
+              {currency} {displayPrice}
               {hasOffer ? (
                 <span className="ms-2 text-gray-400 line-through">
-                  AED {product.price}
+                  {currency} {product.price}
                 </span>
               ) : null}
             </h5>

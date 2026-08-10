@@ -1,4 +1,5 @@
 import { AuthApiError } from "@/lib/api/auth";
+import { buildApiHeaders } from "@/lib/api-headers";
 import { fetcher } from "@/lib/fetcher";
 import { handleUnauthorizedResponse } from "@/lib/session";
 import type { AuthResponse } from "@/types/auth";
@@ -21,12 +22,11 @@ async function wishlistRequest(
     throw new Error("API URL is not configured");
   }
 
+  const headers = await buildApiHeaders({ token });
+
   const res = await fetch(`${API_URL}/wishlist/${productId}`, {
     method,
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
   });
 
   let data: Record<string, unknown> | null = null;

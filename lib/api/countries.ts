@@ -1,3 +1,4 @@
+import { buildApiHeaders } from "@/lib/api-headers";
 import type { CitiesResponse, CountriesResponse } from "@/types/address";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -7,11 +8,11 @@ async function fetchPublicJson<T>(path: string): Promise<T> {
     throw new Error("API URL is not configured");
   }
 
+  const headers = await buildApiHeaders({ token: null });
+
   const res = await fetch(`${API_URL}${path}`, {
     method: "GET",
-    headers: {
-      Accept: "application/json",
-    },
+    headers,
   });
 
   if (!res.ok) {

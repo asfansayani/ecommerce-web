@@ -1,11 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/i18n/navigation";
+import { useCurrencyCode } from "@/hooks/useCurrencyCode";
 import type { Order } from "@/types/order";
 import OrderStatusBadge from "./OrderStatusBadge";
 
 export default function OrderCard({ order }: { order: Order }) {
+  const currency = useCurrencyCode();
   const previewItem = order.items[0];
 
   return (
@@ -39,7 +43,7 @@ export default function OrderCard({ order }: { order: Order }) {
                 </p>
               </div>
               <p className="shrink-0 text-sm text-primary md:text-base">
-                AED {previewItem.price}
+                {currency} {previewItem.price}
               </p>
             </div>
           </div>
@@ -52,12 +56,11 @@ export default function OrderCard({ order }: { order: Order }) {
             Total ({order.totalItems} Item{order.totalItems === 1 ? "" : "s"})
           </p>
           <p className="mt-1 text-sm font-semibold text-primary md:text-base">
-            AED {order.totalAmount}
+            {currency} {order.totalAmount}
           </p>
         </div>
 
         <Button
-          
           nativeButton={false}
           render={<Link href={`/orders/${order.id}`} />}
         >

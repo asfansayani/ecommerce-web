@@ -11,9 +11,11 @@ import { FormField } from "@/components/ui/form-field";
 import ProductsNotFound from "@/components/common/ProductsNotFound";
 import { validateCartItems } from "@/lib/api/orders";
 import { setCheckoutMeta } from "@/lib/checkout-storage";
+import { useCurrencyCode } from "@/hooks/useCurrencyCode";
 import { useCartStore } from "@/store/cartStore";
 import type { CartItem, ValidateCartItemResult } from "@/types/cart";
 import { cn } from "@/lib/utils";
+
 
 function formatMoney(value: number) {
   return value.toFixed(2);
@@ -48,6 +50,8 @@ type CartCheckoutFormValues = {
 };
 
 export default function CartPageContent() {
+  const currency = useCurrencyCode();
+
   const router = useRouter();
   const items = useCartStore((s) => s.items);
   const updateQuantity = useCartStore((s) => s.updateQuantity);
@@ -196,7 +200,7 @@ export default function CartPageContent() {
                             </p>
                           ) : null}
                           <p className="mt-1 text-sm text-tertiary">
-                            AED {item.price}
+                            {currency} {item.price}
                           </p>
                           {isInvalid ? (
                             <p className="mt-1 text-sm text-red-600" role="alert">
@@ -206,7 +210,7 @@ export default function CartPageContent() {
                         </div>
 
                         <p className="shrink-0 text-sm font-medium text-primary md:text-base">
-                          AED{" "}
+                          {currency}{" "}
                           {formatMoney(
                             Number.isFinite(lineTotal) ? lineTotal : 0,
                           )}
@@ -307,7 +311,7 @@ export default function CartPageContent() {
           <div className="mt-5 divide-y divide-border border-t border-border">
             <div className="flex items-center justify-between gap-4 py-3 text-sm">
               <span className="text-gray-500">Subtotal</span>
-              <span className="text-primary">AED {formatMoney(subtotal)}</span>
+              <span className="text-primary">{currency} {formatMoney(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between gap-4 py-3 text-sm">
               <span className="text-gray-500">Shipping</span>
@@ -318,7 +322,7 @@ export default function CartPageContent() {
             <div className="flex items-center justify-between gap-4 py-3 text-sm">
               <span className="font-semibold text-primary">Total</span>
               <span className="font-semibold text-primary">
-                AED {formatMoney(subtotal)}
+                {currency} {formatMoney(subtotal)}
               </span>
             </div>
           </div>
@@ -337,7 +341,7 @@ export default function CartPageContent() {
             variant="outline"
             size="lg"
             nativeButton={false}
-            render={<Link href="/shop/collections" />}
+            render={<Link href="/shop/products" />}
             className="mt-3 h-11 w-full rounded-md border-primary/80 bg-transparent text-xs font-semibold uppercase tracking-[0.12em] text-primary hover:bg-primary/5"
           >
             Continue Shopping

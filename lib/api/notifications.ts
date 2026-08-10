@@ -1,4 +1,5 @@
 import { AuthApiError } from "@/lib/api/auth";
+import { buildApiHeaders } from "@/lib/api-headers";
 import { handleUnauthorizedResponse } from "@/lib/session";
 import type {
   AuthResponse,
@@ -21,14 +22,13 @@ export async function updateNotificationPreferences(
     inAppSystem: String(payload.inAppSystem),
   });
 
+  const headers = await buildApiHeaders({ token });
+
   const res = await fetch(
     `${API_URL}/notifications/preference?${params.toString()}`,
     {
       method: "PATCH",
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${token}`,
-      },
+      headers,
     }
   );
 
